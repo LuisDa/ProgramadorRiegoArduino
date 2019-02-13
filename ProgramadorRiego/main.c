@@ -94,8 +94,7 @@ int main(void)
 	PORTC = (1 << PORTC0) | (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
 	
 	setup_external_int();
-	//setup_timer0();
-	
+		
 	//Escribimos una primera vez en el LCD, luego sólo si hay cambios
 	escribir_lcd = 1;
 
@@ -127,21 +126,12 @@ int main(void)
 			Lcd4_Write_Char(hay_tecla?49:48);
 		}
 		
-		
-		//Centenas
-		/*
-		Lcd4_Write_Char((contador_interr/100)%10 + 48); //ASCII numérico para las centenas
-		Lcd4_Set_Cursor(1,12);
-		Lcd4_Write_Char((contador_interr/10)%10 + 48); //ASCII numérico para las decenas
-		Lcd4_Set_Cursor(1,13);
-		Lcd4_Write_Char(contador_interr%10 + 48); //ASCII numérico para las unidades
-		*/
-
+				
 		if (((PINB & 0b00111100) != 0b00111100) /*&& (!hay_tecla)*/)
 		{
 			
 			//Apagamos todas las filas poniendo a 1 sus salidas respectivas
-			PORTC = PORTC | 0b00001111;
+			//PORTC = PORTC | 0b00001111; //Esto... es mal. Cuando se pulsa una tecla, reinicia continuamente el bucle de búsqueda y no mantiene el valor de la tecla mientras es pulsada.
 		
 			//Hacemos el barrido por todas ellas hasta que encontremos la fila activa
 			fila = 0;
@@ -192,25 +182,16 @@ int main(void)
 			{
 				tecla = getKeyPressed[fila][columna];
 				escribir_lcd = 1;
-			}
-			/*
-			else
-			{				
-				tecla = 'N';
-				escribir_lcd = 1;
-			}
-			*/
-		
+			}		
 		}				
 		else
-		{			
-			//tecla = 'N';
+		{		
+			tecla = 'N';		
 			hay_tecla = 0;
 			escribir_lcd = 1;
 		}
 		
-
-		if (!hay_tecla) fila = (fila + 1)%4;
+		fila = (fila + 1)%4;
 	
 		_delay_ms(10);
 
@@ -226,13 +207,15 @@ ISR (INT0_vect)
 //FUNCION QUE SE LLAMARÁ CON CADA EVENTO DEL TIMER
 ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 {
-	fila = (fila + 1)%4;
+	//fila = (fila + 1)%4;
 	
+/*
 	switch(fila)
 	{
 		case 0: PORTC = 0b00000111; break;
 		case 1: PORTC = 0b00001011; break;
 		case 2: PORTC = 0b00001101; break;
 		case 3: PORTC = 0b00001110; break;
-	}
+	}		
+*/	
 }
