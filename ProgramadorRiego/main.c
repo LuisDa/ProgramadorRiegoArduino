@@ -20,15 +20,20 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'7', '8', '9', 'C'}, 
 										 {'*', '0', '#', 'D'}};
 
+enum Pantallas {DEBUG, FECHA_HORA};
+
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
 //static uint8_t lectura_teclado = 0b00000000;
 static char tecla = 0x00;
+static char tecla0 = 0x00;
 volatile static uint8_t fila = 0;
 volatile static uint8_t columna = 0;
 static uint8_t hay_tecla = 0;
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
 uint8_t bucle_teclado_recorrido = 0;
+uint8_t contador = 0;
+uint8_t pantalla_activa = DEBUG;
 //static uint8_t leyendo_teclado = 0;
 
 //Declaración de funciones
@@ -37,6 +42,7 @@ void setup_timer0(void);
 
 void actualizar_LCD(void);
 void explorar_teclado(void);
+void procesar_accion(void);
 
 //Definición de funciones
 //Función de configuración de las interrupciones externas INT0 (pin PD2)
@@ -85,15 +91,32 @@ void actualizar_LCD()
 	//Actualizar el teclado
 	if (escribir_lcd)
 	{
-		Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
-		Lcd4_Write_String("TECLA: ");
-		Lcd4_Set_Cursor(1,9);
-		Lcd4_Write_Char(tecla); //Tecla pulsada
-		escribir_lcd = 0;
-		Lcd4_Set_Cursor(2,1);
-		Lcd4_Write_String("PULSADO: ");
-		Lcd4_Set_Cursor(2,12);
-		Lcd4_Write_Char(hay_tecla?49:48);
+		switch (pantalla_activa)
+		{
+			case DEBUG:
+				contador++;
+				if (contador==10) contador = 0;
+				Lcd4_Clear();
+				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+				Lcd4_Write_String("TECLA: ");
+				Lcd4_Set_Cursor(1,9);
+				Lcd4_Write_Char(tecla); //Tecla pulsada
+				//escribir_lcd = 0;
+				Lcd4_Set_Cursor(2,1);
+				Lcd4_Write_String("PULSADO: ");
+				Lcd4_Set_Cursor(2,12);
+				Lcd4_Write_Char(hay_tecla?49:48);
+				Lcd4_Set_Cursor(2,14);
+				Lcd4_Write_Char(48+contador);
+				break;
+			case FECHA_HORA:
+				Lcd4_Clear();
+				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+				Lcd4_Write_String("F: DD/MM/AAAA");			
+				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
+				Lcd4_Write_String("H: HH/MM/SS");
+				break;
+		}
 	}	
 }
 
@@ -164,19 +187,26 @@ void explorar_teclado()
 			if (hay_tecla && bucle_teclado_recorrido)
 			{
 				tecla = getKeyPressed[fila][columna];
-				escribir_lcd = 1;
+				//escribir_lcd = 1;
 			}
 		}
 		else
 		{
-			//tecla = 'N';
-			tecla++; //PUFO: Con esto hemos visto que seguimos escribiendo continuamente en el LCD.
+			tecla = 'N';
+			//tecla++; //PUFO: Con esto hemos visto que seguimos escribiendo continuamente en el LCD.
 			hay_tecla = 0;
-			escribir_lcd = 1;
+			//escribir_lcd = 1;
 		}
 		
 		fila = (fila + 1)%4;	
 }
+
+void procesar_accion()
+{
+	if (tecla == 'D') pantalla_activa = DEBUG;
+	else if (tecla == 'A') pantalla_activa = FECHA_HORA;
+}
+
 
 int main(void)
 {
@@ -206,7 +236,11 @@ int main(void)
 	while(1)
 	{
 		explorar_teclado();
+		if (tecla != tecla0) escribir_lcd = 1;
+		else escribir_lcd = 0;		
+		procesar_accion();
 		actualizar_LCD();		
+		tecla0 = tecla;
 		_delay_ms(10);
 	}
 }
