@@ -28,6 +28,7 @@ volatile static uint8_t fila = 0;
 volatile static uint8_t columna = 0;
 static uint8_t hay_tecla = 0;
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
+uint8_t bucle_teclado_recorrido = 0;
 //static uint8_t leyendo_teclado = 0;
 
 //Declaración de funciones
@@ -35,6 +36,7 @@ void setup_external_int(void);
 void setup_timer0(void);
 
 void actualizar_LCD(void);
+void explorar_teclado(void);
 
 //Definición de funciones
 //Función de configuración de las interrupciones externas INT0 (pin PD2)
@@ -95,9 +97,89 @@ void actualizar_LCD()
 	}	
 }
 
+void explorar_teclado()
+{
+		//Exploración del teclado
+		if (!hay_tecla)
+		{
+			switch(fila)
+			{
+				case 0: PORTC = 0b00000111; break;
+				case 1: PORTC = 0b00001011; break;
+				case 2: PORTC = 0b00001101; break;
+				case 3: PORTC = 0b00001110; break;
+			}
+		}
+		
+		_delay_ms(5); //Conviene dejar un tiempo desde que excitamos la fila, para que pueda ser leída la columna correspondiente (caso de pulsarse una tecla).
+		
+		//Detectar tecla pulsada
+		if (((PINB & 0b00111100) != 0b00111100) /*&& (!hay_tecla)*/)
+		{
+			//Hacemos el barrido por todas ellas hasta que encontremos la fila activa
+			fila = 0;
+			columna = 0;
+			//hay_tecla = 0;
+			bucle_teclado_recorrido = 0;
+			
+			//Y buscamos la fila cuya tecla se ha pulsado
+			while((!hay_tecla) && (fila <= 3))
+			{
+				if (fila == 0) PORTC = 0b00000111;
+				else if (fila == 1) PORTC = 0b00001011;
+				else if (fila == 2) PORTC = 0b00001101;
+				else if (fila == 3) PORTC = 0b00001110;
+				
+				bucle_teclado_recorrido = 1;
+				
+				//Esperamos un poco
+				_delay_ms(5);
+				
+				if ((PINB & 0b00111100) == 0b00011100)
+				{
+					columna = 3;
+					hay_tecla = 1;
+				}
+				else if ((PINB & 0b00111100) == 0b00101100)
+				{
+					columna = 2;
+					hay_tecla = 1;
+				}
+				else if ((PINB & 0b00111100) == 0b00110100)
+				{
+					columna = 1;
+					hay_tecla = 1;
+				}
+				else if ((PINB & 0b00111100) == 0b00111000)
+				{
+					columna = 0;
+					hay_tecla = 1;
+				}
+				else
+				{
+					fila++;
+				}
+			}
+
+			if (hay_tecla && bucle_teclado_recorrido)
+			{
+				tecla = getKeyPressed[fila][columna];
+				escribir_lcd = 1;
+			}
+		}
+		else
+		{
+			tecla = 'N';
+			hay_tecla = 0;
+			escribir_lcd = 1;
+		}
+		
+		fila = (fila + 1)%4;	
+}
+
 int main(void)
 {
-	uint8_t bucle_teclado_recorrido = 0;
+	//uint8_t bucle_teclado_recorrido = 0;
 	
 	DDRD = 0xFF;
 	DDRC = 0x0F;
@@ -119,89 +201,12 @@ int main(void)
 
 	Lcd4_Init();
 	Lcd4_Clear();
-	while(1)
-	{			
-		
-		//Exploración del teclado
-		if (!hay_tecla)		
-		{
-			switch(fila)
-			{
-				case 0: PORTC = 0b00000111; break;
-				case 1: PORTC = 0b00001011; break;
-				case 2: PORTC = 0b00001101; break;
-				case 3: PORTC = 0b00001110; break;
-			}
-		}
-		
-		//Actualizar el teclado
-		actualizar_LCD();
-		
-		//Detectar tecla pulsada		
-		if (((PINB & 0b00111100) != 0b00111100) /*&& (!hay_tecla)*/)
-		{		
-			//Hacemos el barrido por todas ellas hasta que encontremos la fila activa
-			fila = 0;
-			columna = 0;
-			//hay_tecla = 0;
-			bucle_teclado_recorrido = 0;
-		
-			//Y buscamos la fila cuya tecla se ha pulsado
-			while((!hay_tecla) && (fila <= 3))
-			{			
-				if (fila == 0) PORTC = 0b00000111;
-				else if (fila == 1) PORTC = 0b00001011;
-				else if (fila == 2) PORTC = 0b00001101;
-				else if (fila == 3) PORTC = 0b00001110;
-				
-				bucle_teclado_recorrido = 1;
-						
-				//Esperamos un poco
-				_delay_ms(5);
-			
-				if ((PINB & 0b00111100) == 0b00011100)
-				{
-					columna = 3;
-					hay_tecla = 1;
-				}			
-				else if ((PINB & 0b00111100) == 0b00101100)
-				{				
-					columna = 2;
-					hay_tecla = 1;
-				}
-				else if ((PINB & 0b00111100) == 0b00110100)
-				{
-					columna = 1;
-					hay_tecla = 1;				
-				}
-				else if ((PINB & 0b00111100) == 0b00111000)
-				{
-					columna = 0;
-					hay_tecla = 1;	
-				}
-				else
-				{
-					fila++;				
-				}
-			}
-
-			if (hay_tecla && bucle_teclado_recorrido) 
-			{
-				tecla = getKeyPressed[fila][columna];
-				escribir_lcd = 1;
-			}		
-		}				
-		else
-		{		
-			tecla = 'N';		
-			hay_tecla = 0;
-			escribir_lcd = 1;
-		}
-		
-		fila = (fila + 1)%4;
 	
+	while(1)
+	{
+		explorar_teclado();
+		actualizar_LCD();		
 		_delay_ms(10);
-
 	}
 }
 
