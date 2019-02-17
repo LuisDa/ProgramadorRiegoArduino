@@ -34,6 +34,8 @@ static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
 void setup_external_int(void);
 void setup_timer0(void);
 
+void actualizar_LCD(void);
+
 //Definición de funciones
 //Función de configuración de las interrupciones externas INT0 (pin PD2)
 void setup_external_int(void)
@@ -76,6 +78,23 @@ void setup_timer0(void)
 	TCCR0B |= (1 << CS02) | (1 << CS00); //Prescaler 1024
 }
 
+void actualizar_LCD()
+{
+	//Actualizar el teclado
+	if (escribir_lcd)
+	{
+		Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+		Lcd4_Write_String("TECLA: ");
+		Lcd4_Set_Cursor(1,9);
+		Lcd4_Write_Char(tecla); //Tecla pulsada
+		escribir_lcd = 0;
+		Lcd4_Set_Cursor(2,1);
+		Lcd4_Write_String("PULSADO: ");
+		Lcd4_Set_Cursor(2,12);
+		Lcd4_Write_Char(hay_tecla?49:48);
+	}	
+}
+
 int main(void)
 {
 	uint8_t bucle_teclado_recorrido = 0;
@@ -102,6 +121,8 @@ int main(void)
 	Lcd4_Clear();
 	while(1)
 	{			
+		
+		//Exploración del teclado
 		if (!hay_tecla)		
 		{
 			switch(fila)
@@ -113,26 +134,12 @@ int main(void)
 			}
 		}
 		
-		if (escribir_lcd)
-		{
-			Lcd4_Set_Cursor(1,1); //Cursor en la primera línea			
-			Lcd4_Write_String("TECLA: ");
-			Lcd4_Set_Cursor(1,9);
-			Lcd4_Write_Char(tecla); //Tecla pulsada
-			escribir_lcd = 0;
-			Lcd4_Set_Cursor(2,1);
-			Lcd4_Write_String("PULSADO: ");
-			Lcd4_Set_Cursor(2,12);
-			Lcd4_Write_Char(hay_tecla?49:48);
-		}
+		//Actualizar el teclado
+		actualizar_LCD();
 		
-				
+		//Detectar tecla pulsada		
 		if (((PINB & 0b00111100) != 0b00111100) /*&& (!hay_tecla)*/)
-		{
-			
-			//Apagamos todas las filas poniendo a 1 sus salidas respectivas
-			//PORTC = PORTC | 0b00001111; //Esto... es mal. Cuando se pulsa una tecla, reinicia continuamente el bucle de búsqueda y no mantiene el valor de la tecla mientras es pulsada.
-		
+		{		
 			//Hacemos el barrido por todas ellas hasta que encontremos la fila activa
 			fila = 0;
 			columna = 0;
