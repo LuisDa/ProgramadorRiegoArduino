@@ -169,7 +169,8 @@ void explorar_teclado()
 		}
 		else
 		{
-			tecla = 'N';
+			//tecla = 'N';
+			tecla++; //PUFO: Con esto hemos visto que seguimos escribiendo continuamente en el LCD.
 			hay_tecla = 0;
 			escribir_lcd = 1;
 		}
