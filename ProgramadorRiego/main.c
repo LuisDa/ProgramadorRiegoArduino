@@ -20,7 +20,7 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'7', '8', '9', 'C'}, 
 										 {'*', '0', '#', 'D'}};
 
-enum Pantallas {DEBUG, FECHA_HORA};
+enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
@@ -32,8 +32,10 @@ volatile static uint8_t columna = 0;
 static uint8_t hay_tecla = 0;
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
 uint8_t bucle_teclado_recorrido = 0;
-uint8_t contador = 0;
-uint8_t pantalla_activa = DEBUG;
+volatile uint8_t contador = 0;
+uint8_t pantalla_activa = CNT_TIMER;
+uint8_t pantalla_activa_previa = CNT_TIMER;
+volatile uint16_t contador_timer = 0; //Hasta 62500
 //static uint8_t leyendo_teclado = 0;
 
 //Declaración de funciones
@@ -76,14 +78,16 @@ void setup_timer0(void)
 	//Elegimos un prescaler (en este caso 1024), el OCR0A vale: OCR = (f_clk * T_timer_secs)/prescaler - 1
 	//f_clk = 16 MHz, T = 16ms, PS = 1024 nos da un OCR = 255 (redondeado al entero más próximo, ya que la operación da un resultado con decimales)
 	//OCR0A = 0x7D;
-	OCR0A = 0xFF;
+	OCR0A = 0xFA; //250
 
 	TIMSK0 |= (1 << OCIE0A);    //Set the ISR COMPA vect
 
-	sei();         //enable interrupts
+	//sei();         //enable interrupts
 
 	//TCCR0B |= (1 << CS02); //Prescaler 256
 	TCCR0B |= (1 << CS02) | (1 << CS00); //Prescaler 1024
+	
+	sei();
 }
 
 void actualizar_LCD()
@@ -94,27 +98,36 @@ void actualizar_LCD()
 		switch (pantalla_activa)
 		{
 			case DEBUG:
-				contador++;
-				if (contador==10) contador = 0;
+				//contador++;
+				//if (contador==10) contador = 0;
 				Lcd4_Clear();
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 				Lcd4_Write_String("TECLA: ");
 				Lcd4_Set_Cursor(1,9);
 				Lcd4_Write_Char(tecla); //Tecla pulsada
-				//escribir_lcd = 0;
+				escribir_lcd = 0;
 				Lcd4_Set_Cursor(2,1);
 				Lcd4_Write_String("PULSADO: ");
 				Lcd4_Set_Cursor(2,12);
 				Lcd4_Write_Char(hay_tecla?49:48);
-				Lcd4_Set_Cursor(2,14);
-				Lcd4_Write_Char(48+contador);
+				//Lcd4_Set_Cursor(2,14);
+				//Lcd4_Write_Char(48+contador);
 				break;
 			case FECHA_HORA:
-				Lcd4_Clear();
+				if (pantalla_activa_previa != FECHA_HORA) Lcd4_Clear();
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 				Lcd4_Write_String("F: DD/MM/AAAA");			
 				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
 				Lcd4_Write_String("H: HH/MM/SS");
+				escribir_lcd = 0;
+				break;
+			case CNT_TIMER:
+				if (pantalla_activa_previa != CNT_TIMER) Lcd4_Clear();
+				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+				Lcd4_Write_String("CONTADOR: ");
+				Lcd4_Set_Cursor(1,12);
+				Lcd4_Write_Char(48+contador);
+				escribir_lcd = 0;
 				break;
 		}
 	}	
@@ -205,6 +218,7 @@ void procesar_accion()
 {
 	if (tecla == 'D') pantalla_activa = DEBUG;
 	else if (tecla == 'A') pantalla_activa = FECHA_HORA;
+	else if (tecla == 'C') pantalla_activa = CNT_TIMER;
 }
 
 
@@ -225,7 +239,8 @@ int main(void)
 	//Inicializamos el puerto C (salidas conectadas a las filas del teclado matricial)
 	PORTC = (1 << PORTC0) | (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
 	
-	setup_external_int();
+	//setup_external_int();
+	setup_timer0();
 		
 	//Escribimos una primera vez en el LCD, luego sólo si hay cambios
 	escribir_lcd = 1;
@@ -236,11 +251,20 @@ int main(void)
 	while(1)
 	{
 		explorar_teclado();
-		if (tecla != tecla0) escribir_lcd = 1;
-		else escribir_lcd = 0;		
+		if (pantalla_activa == DEBUG)
+		{		
+			if (tecla != tecla0) escribir_lcd = 1;
+			else escribir_lcd = 0;		
+		}
+		else if (pantalla_activa == FECHA_HORA) 
+		{
+			escribir_lcd = 1;	
+		}
+		
 		procesar_accion();
 		actualizar_LCD();		
 		tecla0 = tecla;
+		pantalla_activa_previa = pantalla_activa;
 		_delay_ms(10);
 	}
 }
@@ -253,16 +277,17 @@ ISR (INT0_vect)
 
 //FUNCION QUE SE LLAMARÁ CON CADA EVENTO DEL TIMER
 ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
-{
-	//fila = (fila + 1)%4;
+{	
+	contador_timer++;
 	
-/*
-	switch(fila)
+	//if (contador_timer == 62499) 
+	if (contador_timer == 62)
 	{
-		case 0: PORTC = 0b00000111; break;
-		case 1: PORTC = 0b00001011; break;
-		case 2: PORTC = 0b00001101; break;
-		case 3: PORTC = 0b00001110; break;
-	}		
-*/	
+		contador_timer = 0; //1 segundo son 62,5 pulsos de 16 ms cada uno
+		contador++;	
+		
+		if (contador == 10) contador = 0;
+		if (pantalla_activa == CNT_TIMER) escribir_lcd = 1;
+	}
+	
 }
