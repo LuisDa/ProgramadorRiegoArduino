@@ -24,19 +24,23 @@ enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
-//static uint8_t lectura_teclado = 0b00000000;
+//Variables relativas a la lectura del teclado
 static char tecla = 0x00;
 static char tecla0 = 0x00;
 volatile static uint8_t fila = 0;
 volatile static uint8_t columna = 0;
 static uint8_t hay_tecla = 0;
-static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
 uint8_t bucle_teclado_recorrido = 0;
-volatile uint8_t contador = 0;
-uint8_t pantalla_activa = CNT_TIMER;
-uint8_t pantalla_activa_previa = CNT_TIMER;
-volatile uint16_t contador_timer = 0; //Hasta 62500
-//static uint8_t leyendo_teclado = 0;
+
+//Variables relativas a la escritura en el LCD
+static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
+uint8_t pantalla_activa = DEBUG;
+uint8_t pantalla_activa_previa = DEBUG;
+
+//Variables para gestión del TIMER
+volatile uint16_t contador_timer = 0; //Hasta 63
+volatile uint8_t contador = 0; 
+
 
 //Declaración de funciones
 void setup_external_int(void);
@@ -51,17 +55,8 @@ void procesar_accion(void);
 void setup_external_int(void)
 {
 	DDRD &= ~(1 << DDD2);     // Clear the PD2 pin
-	// PD2 (PCINT0 pin) is now an input
-
-	//PORTD |= (1 << PORTD2);    // turn On the Pull-up
-	// PD2 is now an input with pull-up enabled
-
-
-
-	EICRA |= (1 << ISC00)|(1 << ISC01);    // set INT0 to trigger on RISING logic change
-	//EICRA |= (1 << ISC01);    // set INT0 to trigger on FALLING logic change
+	EICRA |= (1 << ISC00)|(1 << ISC01);    // set INT0 to trigger on RISING logic change	
 	EIMSK |= (1 << INT0);     // Turns on INT0
-
 	sei();                    // turn on interrupts
 	
 }
@@ -73,20 +68,11 @@ void setup_timer0(void)
 	// Set the Timer Mode to CTC
 	TCCR0A |= (1 << WGM01);
 
-	// Set the value that you want to count to
-	//OCR0A = 0x9C;//0xF9;
 	//Elegimos un prescaler (en este caso 1024), el OCR0A vale: OCR = (f_clk * T_timer_secs)/prescaler - 1
-	//f_clk = 16 MHz, T = 16ms, PS = 1024 nos da un OCR = 255 (redondeado al entero más próximo, ya que la operación da un resultado con decimales)
-	//OCR0A = 0x7D;
+	//f_clk = 16 MHz, T = 16ms, PS = 1024 nos da un OCR = 255 (redondeado al entero más próximo, ya que la operación da un resultado con decimales)	
 	OCR0A = 0xFA; //250
-
 	TIMSK0 |= (1 << OCIE0A);    //Set the ISR COMPA vect
-
-	//sei();         //enable interrupts
-
-	//TCCR0B |= (1 << CS02); //Prescaler 256
-	TCCR0B |= (1 << CS02) | (1 << CS00); //Prescaler 1024
-	
+	TCCR0B |= (1 << CS02) | (1 << CS00); //Prescaler 1024	
 	sei();
 }
 
@@ -98,8 +84,6 @@ void actualizar_LCD()
 		switch (pantalla_activa)
 		{
 			case DEBUG:
-				//contador++;
-				//if (contador==10) contador = 0;
 				Lcd4_Clear();
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 				Lcd4_Write_String("TECLA: ");
@@ -110,8 +94,6 @@ void actualizar_LCD()
 				Lcd4_Write_String("PULSADO: ");
 				Lcd4_Set_Cursor(2,12);
 				Lcd4_Write_Char(hay_tecla?49:48);
-				//Lcd4_Set_Cursor(2,14);
-				//Lcd4_Write_Char(48+contador);
 				break;
 			case FECHA_HORA:
 				if (pantalla_activa_previa != FECHA_HORA) Lcd4_Clear();
@@ -154,8 +136,7 @@ void explorar_teclado()
 		{
 			//Hacemos el barrido por todas ellas hasta que encontremos la fila activa
 			fila = 0;
-			columna = 0;
-			//hay_tecla = 0;
+			columna = 0;	
 			bucle_teclado_recorrido = 0;
 			
 			//Y buscamos la fila cuya tecla se ha pulsado
@@ -199,16 +180,13 @@ void explorar_teclado()
 
 			if (hay_tecla && bucle_teclado_recorrido)
 			{
-				tecla = getKeyPressed[fila][columna];
-				//escribir_lcd = 1;
+				tecla = getKeyPressed[fila][columna];				
 			}
 		}
 		else
 		{
-			tecla = 'N';
-			//tecla++; //PUFO: Con esto hemos visto que seguimos escribiendo continuamente en el LCD.
-			hay_tecla = 0;
-			//escribir_lcd = 1;
+			tecla = 'N';			
+			hay_tecla = 0;			
 		}
 		
 		fila = (fila + 1)%4;	
@@ -224,8 +202,6 @@ void procesar_accion()
 
 int main(void)
 {
-	//uint8_t bucle_teclado_recorrido = 0;
-	
 	DDRD = 0xFF;
 	DDRC = 0x0F;
 
@@ -279,8 +255,7 @@ ISR (INT0_vect)
 ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 {	
 	contador_timer++;
-	
-	//if (contador_timer == 62499) 
+
 	if (contador_timer == 62)
 	{
 		contador_timer = 0; //1 segundo son 62,5 pulsos de 16 ms cada uno
@@ -288,6 +263,5 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 		
 		if (contador == 10) contador = 0;
 		if (pantalla_activa == CNT_TIMER) escribir_lcd = 1;
-	}
-	
+	}	
 }
