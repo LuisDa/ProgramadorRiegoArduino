@@ -20,7 +20,7 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'7', '8', '9', 'C'}, 
 										 {'*', '0', '#', 'D'}};
 
-enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER};
+enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
@@ -34,8 +34,12 @@ uint8_t bucle_teclado_recorrido = 0;
 
 //Variables relativas a la escritura en el LCD
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
-uint8_t pantalla_activa = DEBUG;
-uint8_t pantalla_activa_previa = DEBUG;
+uint8_t pantalla_activa = TST_LCD;
+uint8_t pantalla_activa_previa = TST_LCD;
+uint8_t pos_horizontal = 0; //Número de columna
+uint8_t pos_horizontal_prev = 0;
+uint8_t pos_vertical = 0; //Número de fila
+uint8_t pos_vertical_prev = 0;
 
 //Variables para gestión del TIMER
 volatile uint16_t contador_timer = 0; //Hasta 63
@@ -83,6 +87,48 @@ void actualizar_LCD()
 	{
 		switch (pantalla_activa)
 		{
+			case TST_LCD:
+				//Lcd4_Clear();
+				Lcd4_Init();
+				Lcd4_Clear();
+				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+				Lcd4_Write_String("BLINK: ");
+				Lcd4_Set_Cursor(1,9);
+				_delay_ms(20);
+				//En modo 4 bits, los comandos deben enviarse así: primero un 0x00 y luego el comando con los cuatro bits más significativos a cerapio
+				Lcd4_Cmd(0x00);
+				Lcd4_Cmd(0x0F);
+				_delay_ms(20);
+				/*
+					Lcd4_Port(0x00);
+					_delay_ms(20);
+					///////////// Reset process from datasheet /////////
+					Lcd4_Cmd(0x03);
+					_delay_ms(5);
+					Lcd4_Cmd(0x03);
+					_delay_ms(11);
+					Lcd4_Cmd(0x03);
+					/////////////////////////////////////////////////////
+					//Cada vez que alguien pone llamadas a funciones sin explicar lo que son ni detallar los parámetros, muere un gatito.
+					Lcd4_Cmd(0x02);
+					Lcd4_Cmd(0x02);
+					Lcd4_Cmd(0x08);
+					Lcd4_Cmd(0x00);
+					Lcd4_Cmd(0x0C);
+					Lcd4_Cmd(0x00);
+					Lcd4_Cmd(0x06);
+				*/
+				/*
+				  Lcd4_Cmd(0x33); // reset, reset
+				  Lcd4_Cmd(0x32); // reset, 4-bit
+
+				  Lcd4_Cmd(0x28); // function set: 4 bits, 1 line, 5x8 dots
+				  Lcd4_Cmd(0x0C); // display control: turn display on, cursor off, no blinking
+				  Lcd4_Cmd(0x06); // entry mode set: increment automatically, display shift, right shift	
+				*/
+				escribir_lcd = 0;
+				break;
+				
 			case DEBUG:
 				Lcd4_Clear();
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
@@ -194,7 +240,24 @@ void explorar_teclado()
 
 void procesar_accion()
 {
-	if (tecla == 'D') pantalla_activa = DEBUG;
+	if (pantalla_activa == TST_LCD)
+	{
+		if (tecla != 'N')
+		{
+			if (pos_horizontal <= 15) 
+			{
+				pos_horizontal++;	
+			}			
+			else
+			{
+				if (pos_vertical == 0) pos_vertical = 1;
+				else pos_vertical = 0;
+				
+				pos_horizontal = 0;				
+			}
+		}
+	}	
+	else if (tecla == 'D') pantalla_activa = DEBUG;
 	else if (tecla == 'A') pantalla_activa = FECHA_HORA;
 	else if (tecla == 'C') pantalla_activa = CNT_TIMER;
 }
@@ -235,6 +298,16 @@ int main(void)
 		else if (pantalla_activa == FECHA_HORA) 
 		{
 			escribir_lcd = 1;	
+		}
+		else if (pantalla_activa == TST_LCD)
+		{
+			if ((pos_vertical_prev != pos_vertical)	|| (pos_horizontal_prev != pos_horizontal))
+			{
+				escribir_lcd = 1;				
+			}
+			
+			pos_vertical_prev = pos_vertical;
+			pos_horizontal_prev = pos_horizontal;
 		}
 		
 		procesar_accion();
