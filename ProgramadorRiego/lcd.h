@@ -374,6 +374,7 @@ void Lcd4_Init()
 	_delay_ms(11);
 	Lcd4_Cmd(0x03);
 	/////////////////////////////////////////////////////
+	//Cada vez que alguien pone llamadas a funciones sin explicar lo que son ni detallar los parámetros, muere un gatito.
 	Lcd4_Cmd(0x02);
 	Lcd4_Cmd(0x02);
 	Lcd4_Cmd(0x08);
@@ -420,5 +421,28 @@ void Lcd4_Shift_Left()
 {
 	Lcd4_Cmd(0x01);
 	Lcd4_Cmd(0x08);
+}
+
+//Permite hacer visible el cursor y/o fijo o parpadeante
+void Lcd4_Set_Cursor_Sts(uint8_t visible, uint8_t blink)
+{
+	if (visible == 0)
+	{
+		Lcd4_Cmd(0x00);
+		Lcd4_Cmd(0x0C);
+	}	
+	else
+	{
+		if (blink == 0)
+		{
+			Lcd4_Cmd(0x00);
+			Lcd4_Cmd(0x0E);
+		}
+		else
+		{
+			Lcd4_Cmd(0x00);
+			Lcd4_Cmd(0x0F);			
+		}
+	}
 }
 //End LCD 4 Bit Interfacing Functions

@@ -99,33 +99,6 @@ void actualizar_LCD()
 				Lcd4_Cmd(0x00);
 				Lcd4_Cmd(0x0F);
 				_delay_ms(20);
-				/*
-					Lcd4_Port(0x00);
-					_delay_ms(20);
-					///////////// Reset process from datasheet /////////
-					Lcd4_Cmd(0x03);
-					_delay_ms(5);
-					Lcd4_Cmd(0x03);
-					_delay_ms(11);
-					Lcd4_Cmd(0x03);
-					/////////////////////////////////////////////////////
-					//Cada vez que alguien pone llamadas a funciones sin explicar lo que son ni detallar los parámetros, muere un gatito.
-					Lcd4_Cmd(0x02);
-					Lcd4_Cmd(0x02);
-					Lcd4_Cmd(0x08);
-					Lcd4_Cmd(0x00);
-					Lcd4_Cmd(0x0C);
-					Lcd4_Cmd(0x00);
-					Lcd4_Cmd(0x06);
-				*/
-				/*
-				  Lcd4_Cmd(0x33); // reset, reset
-				  Lcd4_Cmd(0x32); // reset, 4-bit
-
-				  Lcd4_Cmd(0x28); // function set: 4 bits, 1 line, 5x8 dots
-				  Lcd4_Cmd(0x0C); // display control: turn display on, cursor off, no blinking
-				  Lcd4_Cmd(0x06); // entry mode set: increment automatically, display shift, right shift	
-				*/
 				escribir_lcd = 0;
 				break;
 				
@@ -240,7 +213,7 @@ void explorar_teclado()
 
 void procesar_accion()
 {
-	if (pantalla_activa == TST_LCD)
+	/*if (pantalla_activa == TST_LCD)
 	{
 		if (tecla != 'N')
 		{
@@ -256,10 +229,17 @@ void procesar_accion()
 				pos_horizontal = 0;				
 			}
 		}
+		else if (tecla == 'D') pantalla_activa = DEBUG;
 	}	
-	else if (tecla == 'D') pantalla_activa = DEBUG;
+	else*/ if (tecla == 'D') pantalla_activa = DEBUG;
 	else if (tecla == 'A') pantalla_activa = FECHA_HORA;
 	else if (tecla == 'C') pantalla_activa = CNT_TIMER;
+	/* //Descomentar sólo para pruebas y/o debug
+	else if (tecla == '*') Lcd4_Set_Cursor_Sts(1,0);
+	else if (tecla == '#') Lcd4_Set_Cursor_Sts(1,1);
+	else if (tecla == '0') Lcd4_Set_Cursor_Sts(0,0);
+	*/
+	
 }
 
 
@@ -297,7 +277,7 @@ int main(void)
 		}
 		else if (pantalla_activa == FECHA_HORA) 
 		{
-			escribir_lcd = 1;	
+			//escribir_lcd = 1;	
 		}
 		else if (pantalla_activa == TST_LCD)
 		{
