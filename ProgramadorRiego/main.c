@@ -20,7 +20,7 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'7', '8', '9', 'C'}, 
 										 {'*', '0', '#', 'D'}};
 
-enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD};
+enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD, FECHA_HORA_EDIT};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
@@ -44,6 +44,12 @@ uint8_t pos_vertical_prev = 0;
 //Variables para gestión del TIMER
 volatile uint16_t contador_timer = 0; //Hasta 63
 volatile uint8_t contador = 0; 
+
+//Variables para fecha y hora (de momento, sólo hora)
+uint8_t hora;
+uint8_t minuto;
+uint8_t segundo;
+
 
 
 //Declaración de funciones
@@ -114,13 +120,47 @@ void actualizar_LCD()
 				Lcd4_Set_Cursor(2,12);
 				Lcd4_Write_Char(hay_tecla?49:48);
 				break;
-			case FECHA_HORA:
+			case FECHA_HORA:			
 				if (pantalla_activa_previa != FECHA_HORA) Lcd4_Clear();
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 				Lcd4_Write_String("F: DD/MM/AAAA");			
 				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
-				Lcd4_Write_String("H: HH/MM/SS");
+				Lcd4_Write_String("H: HH:MM");
+				// -- Sólo para probar cursor superpuesto sobre un caracter adicional
+				//Lcd4_Set_Cursor(2,4);
+				//Lcd4_Cmd(0x00);
+				//Lcd4_Cmd(0x0F);
+				
 				escribir_lcd = 0;
+				break;
+			case FECHA_HORA_EDIT:	
+				if (pantalla_activa_previa != FECHA_HORA_EDIT) 
+				{
+					Lcd4_Clear();
+					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+					Lcd4_Write_String("F: DD/MM/AAAA");
+					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
+					Lcd4_Write_String("H: HH:MM (E)");
+					Lcd4_Set_Cursor_Sts(1,1);
+					// -- Sólo para probar cursor superpuesto sobre un caracter adicional
+					//Lcd4_Set_Cursor(2,4);
+					//Lcd4_Cmd(0x00);
+					//Lcd4_Cmd(0x0F);
+					//pos_horizontal = 4; //De 0 a 15
+					//pos_vertical = 1; //0->primera fila, 1->segunda fila		
+					escribir_lcd = 0;					
+				}
+				else
+				{
+					Lcd4_Clear();
+					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
+					Lcd4_Write_String("F: DD/MM/AAAA");
+					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
+					Lcd4_Write_String("H: HH:MM (X)");
+					Lcd4_Set_Cursor(2,pos_horizontal);
+					Lcd4_Set_Cursor_Sts(1,1);
+					escribir_lcd = 0;
+				}
 				break;
 			case CNT_TIMER:
 				if (pantalla_activa_previa != CNT_TIMER) Lcd4_Clear();
@@ -234,6 +274,40 @@ void procesar_accion()
 	else*/ if (tecla == 'D') pantalla_activa = DEBUG;
 	else if (tecla == 'A') pantalla_activa = FECHA_HORA;
 	else if (tecla == 'C') pantalla_activa = CNT_TIMER;
+	else 
+	{			
+		if (pantalla_activa == FECHA_HORA)
+		{
+			if (tecla == 'B') 
+			{
+				pantalla_activa = FECHA_HORA_EDIT;	
+				escribir_lcd = 1;	
+			}			
+		}
+		else if (pantalla_activa == FECHA_HORA_EDIT) //Aquí, editar fecha y hora
+		{
+			if (pantalla_activa_previa == FECHA_HORA) 
+			{
+				//Lcd4_Set_Cursor(2,4);	
+				//Lcd4_Cmd(0x00);
+				//Lcd4_Cmd(0x0F);
+				pos_horizontal = 0; //De 0 a 15
+				pos_vertical = 1; //0->primera fila, 1->segunda fila
+				escribir_lcd = 1;
+			}
+			else
+			{
+				if ((tecla >= 48) && (tecla <= 57)) //Sólo teclas numéricas
+				{
+					if (tecla != tecla0) pos_horizontal++;
+					//if (pos_horizontal <= 9) pos_horizontal++;
+					//if (pos_horizontal == 6) pos_horizontal++; //Para saltarnos el carácter ':'
+					//Lcd4_Set_Cursor(2,pos_horizontal);
+					escribir_lcd = 1;
+				}				
+			}			
+		}
+	}
 	/* //Descomentar sólo para pruebas y/o debug
 	else if (tecla == '*') Lcd4_Set_Cursor_Sts(1,0);
 	else if (tecla == '#') Lcd4_Set_Cursor_Sts(1,1);
