@@ -49,6 +49,7 @@ volatile uint8_t contador = 0;
 uint8_t hora;
 uint8_t minuto;
 uint8_t segundo;
+uint8_t fecha_hora_teclas[4] = {0,0,0,0};
 
 
 
@@ -156,7 +157,15 @@ void actualizar_LCD()
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 					Lcd4_Write_String("F: DD/MM/AAAA");
 					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
-					Lcd4_Write_String("H: HH:MM (X)");
+					//Lcd4_Write_String("H: HH:MM (X)");
+					Lcd4_Write_String("H: ");
+					
+					for (int i = 4; i < pos_horizontal; i++)
+					{
+						Lcd4_Set_Cursor(i, 1);
+						Lcd4_Write_Char(fecha_hora_teclas[i-4]);
+					}
+					
 					Lcd4_Set_Cursor(2,pos_horizontal);
 					Lcd4_Set_Cursor_Sts(1,1);
 					escribir_lcd = 0;
@@ -299,7 +308,28 @@ void procesar_accion()
 			{
 				if ((tecla >= 48) && (tecla <= 57)) //Sólo teclas numéricas
 				{
-					if (tecla != tecla0) pos_horizontal++;
+					if (pos_horizontal == 0) pos_horizontal = 4;
+					else if (tecla != tecla0) pos_horizontal++;
+					
+					switch (pos_horizontal)
+					{
+						case 4: 
+							fecha_hora_teclas[0] = tecla;
+							break;
+						case 5:	
+							fecha_hora_teclas[1] = tecla;
+							break;						
+						case 7:
+							fecha_hora_teclas[2] = tecla;
+							break;
+						case 8:
+							fecha_hora_teclas[3] = tecla;
+							break;							
+						default: 
+							break;
+					}
+					
+					
 					//if (pos_horizontal <= 9) pos_horizontal++;
 					//if (pos_horizontal == 6) pos_horizontal++; //Para saltarnos el carácter ':'
 					//Lcd4_Set_Cursor(2,pos_horizontal);
