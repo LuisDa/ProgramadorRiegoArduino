@@ -31,13 +31,14 @@ volatile static uint8_t fila = 0;
 volatile static uint8_t columna = 0;
 static uint8_t hay_tecla = 0;
 uint8_t bucle_teclado_recorrido = 0;
+uint8_t hora_introducida = 0;
 
 //Variables relativas a la escritura en el LCD
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
-uint8_t pantalla_activa = TST_LCD;
-uint8_t pantalla_activa_previa = TST_LCD;
-//uint8_t pantalla_activa = FECHA_HORA_EDIT;
-//uint8_t pantalla_activa_previa = FECHA_HORA;
+//uint8_t pantalla_activa = TST_LCD;
+//uint8_t pantalla_activa_previa = TST_LCD;
+uint8_t pantalla_activa = FECHA_HORA_EDIT;
+uint8_t pantalla_activa_previa = FECHA_HORA;
 uint8_t pos_horizontal = 0; //Número de columna
 uint8_t pos_horizontal_prev = 0;
 uint8_t pos_vertical = 0; //Número de fila
@@ -129,7 +130,15 @@ void actualizar_LCD()
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 				Lcd4_Write_String("F: DD/MM/AAAA");			
 				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
-				Lcd4_Write_String("H: HH:MM");
+				if (hora_introducida == 0) 
+				{
+					Lcd4_Write_String("H: HH:MM");
+				}
+				else
+				{
+					Lcd4_Write_String("H: ");
+					for (int i = 0; i <= 4; i++) Lcd4_Write_Char(fecha_hora_caracteres[i]);				
+				}
 				// -- Sólo para probar cursor superpuesto sobre un caracter adicional
 				//Lcd4_Set_Cursor(2,4);
 				//Lcd4_Cmd(0x00);
@@ -182,7 +191,7 @@ void actualizar_LCD()
 					}
 					*/
 					
-					Lcd4_Set_Cursor(2,pos_horizontal+1);
+					Lcd4_Set_Cursor(2,pos_horizontal);
 					Lcd4_Set_Cursor_Sts(1,1);
 					escribir_lcd = 0;
 				}
@@ -307,6 +316,7 @@ void procesar_accion()
 			{
 				pantalla_activa = FECHA_HORA_EDIT;	
 				escribir_lcd = 1;	
+				pos_horizontal = 0;
 			}			
 		}
 		else if (pantalla_activa == FECHA_HORA_EDIT) //Aquí, editar fecha y hora
@@ -326,7 +336,7 @@ void procesar_accion()
 				{
 					if (pos_horizontal == 0) pos_horizontal = 4;
 					//else if (tecla != tecla0) pos_horizontal++;
-					if (pos_horizontal == 6) pos_horizontal++;
+					//if (pos_horizontal == 6) pos_horizontal++;
 					
 					switch (pos_horizontal)
 					{
@@ -345,12 +355,14 @@ void procesar_accion()
 						case 8:
 							//fecha_hora_teclas[3] = tecla;
 							fecha_hora_caracteres[4] = tecla;
+							hora_introducida = 1;
 							break;							
 						default: 
 							break;
 					}
 					
-					pos_horizontal++;
+					if (pos_horizontal <= 8) pos_horizontal++;
+					if (pos_horizontal == 6) pos_horizontal++;
 					//if (pos_horizontal <= 9) pos_horizontal++;
 					//if (pos_horizontal == 6) pos_horizontal++; //Para saltarnos el carácter ':'
 					//Lcd4_Set_Cursor(2,pos_horizontal);
