@@ -35,10 +35,10 @@ uint8_t hora_introducida = 0;
 
 //Variables relativas a la escritura en el LCD
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
-//uint8_t pantalla_activa = TST_LCD;
-//uint8_t pantalla_activa_previa = TST_LCD;
-uint8_t pantalla_activa = FECHA_HORA_EDIT;
-uint8_t pantalla_activa_previa = FECHA_HORA;
+uint8_t pantalla_activa = TST_LCD;
+uint8_t pantalla_activa_previa = TST_LCD;
+//uint8_t pantalla_activa = FECHA_HORA_EDIT;
+//uint8_t pantalla_activa_previa = FECHA_HORA;
 uint8_t pos_horizontal = 0; //Número de columna
 uint8_t pos_horizontal_prev = 0;
 uint8_t pos_vertical = 0; //Número de fila
@@ -152,45 +152,23 @@ void actualizar_LCD()
 					Lcd4_Clear();
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 					Lcd4_Write_String("F: DD/MM/AAAA");
-					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
-					//Lcd4_Write_String("H: HH:MM (E)");
+					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea					
 					Lcd4_Write_String("H: __:__");	
 					Lcd4_Set_Cursor(2,4);				
-					Lcd4_Set_Cursor_Sts(1,1);
-					// -- Sólo para probar cursor superpuesto sobre un caracter adicional
-					//Lcd4_Set_Cursor(2,4);
-					//Lcd4_Cmd(0x00);
-					//Lcd4_Cmd(0x0F);
-					//pos_horizontal = 4; //De 0 a 15
-					//pos_vertical = 1; //0->primera fila, 1->segunda fila		
+					Lcd4_Set_Cursor_Sts(1,1);	
 					escribir_lcd = 0;					
 				}
 				else
 				{
-					//Lcd4_Clear();
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 					Lcd4_Write_String("F: DD/MM/AAAA");
-					//Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
-					//Lcd4_Write_String("H: HH:MM (X)");
-					//Lcd4_Write_String("H: __:__");
-					//Lcd4_Set_Cursor(2,pos_horizontal);
 					Lcd4_Set_Cursor(2,4);
 					
 					for(int i = 0; i <= 4; i++)
-					{
-						//Lcd4_Set_Cursor()
+					{						
 						Lcd4_Write_Char(fecha_hora_caracteres[i]);
 					}
-					
-					/*
-					for (int i = 4; i <= pos_horizontal; i++)
-					{
-						//Lcd4_Set_Cursor(i, 1);						
-						//if (i != 6) Lcd4_Write_Char(fecha_hora_teclas[i-4]);
-						Lcd4_Write_Char(fecha_hora_caracteres[i-4]);
-					}
-					*/
-					
+										
 					Lcd4_Set_Cursor(2,pos_horizontal);
 					Lcd4_Set_Cursor_Sts(1,1);
 					escribir_lcd = 0;
@@ -287,27 +265,21 @@ void explorar_teclado()
 
 void procesar_accion()
 {
-	/*if (pantalla_activa == TST_LCD)
+	if (tecla == 'D') 
 	{
-		if (tecla != 'N')
-		{
-			if (pos_horizontal <= 15) 
-			{
-				pos_horizontal++;	
-			}			
-			else
-			{
-				if (pos_vertical == 0) pos_vertical = 1;
-				else pos_vertical = 0;
-				
-				pos_horizontal = 0;				
-			}
-		}
-		else if (tecla == 'D') pantalla_activa = DEBUG;
+		pantalla_activa = DEBUG;
+		//escribir_lcd = 1;
+	}
+	else if (tecla == 'A') 
+	{
+		pantalla_activa = FECHA_HORA;
+		escribir_lcd = 1;
+	}
+	else if (tecla == 'C') 
+	{
+		pantalla_activa = CNT_TIMER;	
+		escribir_lcd = 1;
 	}	
-	else*/ if (tecla == 'D') pantalla_activa = DEBUG;
-	else if (tecla == 'A') pantalla_activa = FECHA_HORA;
-	else if (tecla == 'C') pantalla_activa = CNT_TIMER;
 	else 
 	{			
 		if (pantalla_activa == FECHA_HORA)
@@ -323,9 +295,6 @@ void procesar_accion()
 		{
 			if (pantalla_activa_previa == FECHA_HORA) 
 			{
-				//Lcd4_Set_Cursor(2,4);	
-				//Lcd4_Cmd(0x00);
-				//Lcd4_Cmd(0x0F);
 				pos_horizontal = 0; //De 0 a 15
 				pos_vertical = 1; //0->primera fila, 1->segunda fila
 				escribir_lcd = 1;
@@ -335,8 +304,6 @@ void procesar_accion()
 				if ((tecla >= 48) && (tecla <= 57)) //Sólo teclas numéricas
 				{
 					if (pos_horizontal == 0) pos_horizontal = 4;
-					//else if (tecla != tecla0) pos_horizontal++;
-					//if (pos_horizontal == 6) pos_horizontal++;
 					
 					switch (pos_horizontal)
 					{
@@ -363,20 +330,12 @@ void procesar_accion()
 					
 					if (pos_horizontal <= 8) pos_horizontal++;
 					if (pos_horizontal == 6) pos_horizontal++;
-					//if (pos_horizontal <= 9) pos_horizontal++;
-					//if (pos_horizontal == 6) pos_horizontal++; //Para saltarnos el carácter ':'
-					//Lcd4_Set_Cursor(2,pos_horizontal);
+
 					escribir_lcd = 1;
 				}				
 			}			
 		}
-	}
-	/* //Descomentar sólo para pruebas y/o debug
-	else if (tecla == '*') Lcd4_Set_Cursor_Sts(1,0);
-	else if (tecla == '#') Lcd4_Set_Cursor_Sts(1,1);
-	else if (tecla == '0') Lcd4_Set_Cursor_Sts(0,0);
-	*/
-	
+	}	
 }
 
 
