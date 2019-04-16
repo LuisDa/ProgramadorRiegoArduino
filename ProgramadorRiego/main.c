@@ -137,7 +137,17 @@ void actualizar_LCD()
 				else
 				{
 					Lcd4_Write_String("H: ");
-					for (int i = 0; i <= 4; i++) Lcd4_Write_Char(fecha_hora_caracteres[i]);				
+					//for (int i = 0; i <= 4; i++) Lcd4_Write_Char(fecha_hora_caracteres[i]);				
+					uint8_t hora_decenas = (hora/10) + 48;
+					uint8_t hora_unidades = (hora%10) + 48;
+					uint8_t minuto_decenas = (minuto/10) + 48;
+					uint8_t minuto_unidades = (minuto%10) + 48;
+					
+					Lcd4_Write_Char(hora_decenas);
+					Lcd4_Write_Char(hora_unidades);
+					Lcd4_Write_Char(':');
+					Lcd4_Write_Char(minuto_decenas);
+					Lcd4_Write_Char(minuto_unidades);
 				}
 				Lcd4_Set_Cursor_Sts(0,0);
 				// -- Sólo para probar cursor superpuesto sobre un caracter adicional
@@ -349,6 +359,9 @@ void procesar_accion()
 				}
 				else if (tecla == '#')
 				{
+					minuto = 10*(fecha_hora_caracteres[3] - 48) + (fecha_hora_caracteres[4] - 48);
+					hora = 10*(fecha_hora_caracteres[0] - 48) + (fecha_hora_caracteres[1] - 48);
+					
 					hora_introducida = 1;
 					pantalla_activa = FECHA_HORA;
 					escribir_lcd = 1;
@@ -462,5 +475,26 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 		
 		if (contador == 10) contador = 0;
 		if (pantalla_activa == CNT_TIMER) escribir_lcd = 1;
+		
+		//Actualizar variables del reloj
+		segundo++;
+		
+		if (segundo == 60) //Sólo aquí, actualizar LCD para actualizar la hora
+		{
+			segundo = 0;
+			
+			minuto++;
+			
+			if (minuto == 60)
+			{
+				minuto = 0;
+				
+				hora++;
+				
+				if (hora == 24) hora = 0;
+			}
+			
+			if (pantalla_activa == FECHA_HORA) escribir_lcd = 1;
+		}
 	}	
 }
