@@ -139,6 +139,7 @@ void actualizar_LCD()
 					Lcd4_Write_String("H: ");
 					for (int i = 0; i <= 4; i++) Lcd4_Write_Char(fecha_hora_caracteres[i]);				
 				}
+				Lcd4_Set_Cursor_Sts(0,0);
 				// -- Sólo para probar cursor superpuesto sobre un caracter adicional
 				//Lcd4_Set_Cursor(2,4);
 				//Lcd4_Cmd(0x00);
@@ -322,7 +323,7 @@ void procesar_accion()
 						case 8:
 							//fecha_hora_teclas[3] = tecla;
 							fecha_hora_caracteres[4] = tecla;
-							hora_introducida = 1;
+							//hora_introducida = 1;
 							break;							
 						default: 
 							break;
@@ -332,7 +333,43 @@ void procesar_accion()
 					if (pos_horizontal == 6) pos_horizontal++;
 
 					escribir_lcd = 1;
-				}				
+				}
+				else if (tecla == '#')
+				{
+					hora_introducida = 1;
+					pantalla_activa = FECHA_HORA;
+					escribir_lcd = 1;
+				}
+				else if (tecla == '*')
+				{
+					switch (pos_horizontal)
+					{
+						case 4:
+						//fecha_hora_teclas[0] = tecla;
+							fecha_hora_caracteres[0] = '_';
+							break;
+						case 5:
+						//fecha_hora_teclas[1] = tecla;
+							fecha_hora_caracteres[1] = '_';
+							break;
+						case 7:
+						//fecha_hora_teclas[2] = tecla;
+							fecha_hora_caracteres[3] = '_';
+							break;
+						case 8:
+						//fecha_hora_teclas[3] = tecla;
+							fecha_hora_caracteres[4] = '_';
+						//hora_introducida = 1;
+							break;
+						default:
+							break;
+					}	
+					
+					if (pos_horizontal > 4) pos_horizontal--;
+					if (pos_horizontal == 6) pos_horizontal--;
+
+					escribir_lcd = 1;			
+				}
 			}			
 		}
 	}	
