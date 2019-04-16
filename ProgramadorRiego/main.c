@@ -153,8 +153,21 @@ void actualizar_LCD()
 					Lcd4_Clear();
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 					Lcd4_Write_String("F: DD/MM/AAAA");
-					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea					
-					Lcd4_Write_String("H: __:__");	
+					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea	
+					if (hora_introducida == 0)
+					{
+						Lcd4_Write_String("H: __:__");		
+					}
+					else
+					{
+						Lcd4_Write_String("H: ");
+						
+						for(int i = 0; i <= 4; i++)
+						{
+							Lcd4_Write_Char(fecha_hora_caracteres[i]);
+						}												
+					}
+					
 					Lcd4_Set_Cursor(2,4);				
 					Lcd4_Set_Cursor_Sts(1,1);	
 					escribir_lcd = 0;					
