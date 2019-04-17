@@ -14,6 +14,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "lcd.h" //Can be download from the bottom of this article
+#include "fecha_hora.h"
 
 static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'4', '5', '6', 'B'},
@@ -130,25 +131,32 @@ void actualizar_LCD()
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 				Lcd4_Write_String("F: DD/MM/AAAA");			
 				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
+				/*
 				if (hora_introducida == 0) 
 				{
 					Lcd4_Write_String("H: HH:MM");
 				}
 				else
-				{
+				{*/
 					Lcd4_Write_String("H: ");
 					//for (int i = 0; i <= 4; i++) Lcd4_Write_Char(fecha_hora_caracteres[i]);				
 					uint8_t hora_decenas = (hora/10) + 48;
 					uint8_t hora_unidades = (hora%10) + 48;
 					uint8_t minuto_decenas = (minuto/10) + 48;
 					uint8_t minuto_unidades = (minuto%10) + 48;
+					uint8_t segundo_decenas = (segundo/10) + 48;
+					uint8_t segundo_unidades = (segundo%10) + 48;
 					
 					Lcd4_Write_Char(hora_decenas);
 					Lcd4_Write_Char(hora_unidades);
 					Lcd4_Write_Char(':');
 					Lcd4_Write_Char(minuto_decenas);
 					Lcd4_Write_Char(minuto_unidades);
-				}
+					Lcd4_Write_Char(':');
+					Lcd4_Write_Char(segundo_decenas);
+					Lcd4_Write_Char(segundo_unidades);
+					
+				/*}*/
 				Lcd4_Set_Cursor_Sts(0,0);
 				// -- Sólo para probar cursor superpuesto sobre un caracter adicional
 				//Lcd4_Set_Cursor(2,4);
@@ -174,7 +182,16 @@ void actualizar_LCD()
 						
 						for(int i = 0; i <= 4; i++)
 						{
-							Lcd4_Write_Char(fecha_hora_caracteres[i]);
+							//Lcd4_Write_Char(fecha_hora_caracteres[i]);
+							uint8_t hora_decenas = (hora/10) + 48;
+							uint8_t hora_unidades = (hora%10) + 48;
+							uint8_t minuto_decenas = (minuto/10) + 48;
+							uint8_t minuto_unidades = (minuto%10) + 48;
+							Lcd4_Write_Char(hora_decenas);
+							Lcd4_Write_Char(hora_unidades);
+							Lcd4_Write_Char(':');
+							Lcd4_Write_Char(minuto_decenas);
+							Lcd4_Write_Char(minuto_unidades);
 						}												
 					}
 					
@@ -362,6 +379,10 @@ void procesar_accion()
 					minuto = 10*(fecha_hora_caracteres[3] - 48) + (fecha_hora_caracteres[4] - 48);
 					hora = 10*(fecha_hora_caracteres[0] - 48) + (fecha_hora_caracteres[1] - 48);
 					
+					setSegundos(0);
+					setMinutos(minuto);
+					setHoras(hora);
+					
 					hora_introducida = 1;
 					pantalla_activa = FECHA_HORA;
 					escribir_lcd = 1;
@@ -477,8 +498,16 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 		if (pantalla_activa == CNT_TIMER) escribir_lcd = 1;
 		
 		//Actualizar variables del reloj
-		segundo++;
 		
+		actualizarReloj();
+		
+		segundo = getSegundos();
+		minuto = getMinutos();
+		hora = getHoras();
+		
+		
+		//segundo++;
+		/*
 		if (segundo == 60) //Sólo aquí, actualizar LCD para actualizar la hora
 		{
 			segundo = 0;
@@ -494,7 +523,11 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 				if (hora == 24) hora = 0;
 			}
 			
-			if (pantalla_activa == FECHA_HORA) escribir_lcd = 1;
+			//if (pantalla_activa == FECHA_HORA) escribir_lcd = 1;
 		}
+		*/
+		
+		if (pantalla_activa == FECHA_HORA) escribir_lcd = 1;
+		
 	}	
 }
