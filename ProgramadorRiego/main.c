@@ -180,8 +180,8 @@ void actualizar_LCD()
 					{
 						Lcd4_Write_String("H: ");
 						
-						for(int i = 0; i <= 4; i++)
-						{
+						//for(int i = 0; i <= 4; i++)
+						//{
 							//Lcd4_Write_Char(fecha_hora_caracteres[i]);
 							uint8_t hora_decenas = (hora/10) + 48;
 							uint8_t hora_unidades = (hora%10) + 48;
@@ -192,7 +192,7 @@ void actualizar_LCD()
 							Lcd4_Write_Char(':');
 							Lcd4_Write_Char(minuto_decenas);
 							Lcd4_Write_Char(minuto_unidades);
-						}												
+						//}												
 					}
 					
 					Lcd4_Set_Cursor(2,4);				
