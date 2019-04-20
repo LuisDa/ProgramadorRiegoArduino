@@ -70,6 +70,8 @@ void actualizar_LCD(void);
 void explorar_teclado(void);
 void procesar_accion(void);
 
+void imprimir_fecha(void);
+
 //Definición de funciones
 //Función de configuración de las interrupciones externas INT0 (pin PD2)
 void setup_external_int(void)
@@ -136,7 +138,7 @@ void actualizar_LCD()
 				
 				//Pintamos la fecha
 				//Lcd4_Write_String("F: DD/MM/AAAA");	
-				Lcd4_Write_String("F: ");
+				/*Lcd4_Write_String("F: ");
 				Lcd4_Write_Char(getFecha_Dia()/10 + 48);
 				Lcd4_Write_Char(getFecha_Dia()%10 + 48);
 				Lcd4_Write_Char('/');
@@ -146,7 +148,8 @@ void actualizar_LCD()
 				Lcd4_Write_Char(50); //Cifra '2', de los millares
 				Lcd4_Write_Char(getFecha_Anno()/100 + 48); //La variable 'anno' va de 0 a 255. Centenas
 				Lcd4_Write_Char(((getFecha_Anno()/10)%10) + 48); //Decenas
-				Lcd4_Write_Char((getFecha_Anno()%10) + 48); //Unidades
+				Lcd4_Write_Char((getFecha_Anno()%10) + 48); //Unidades*/
+				imprimir_fecha();
 						
 				//Pintamos la hora		
 				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea				
@@ -181,7 +184,8 @@ void actualizar_LCD()
 				{
 					Lcd4_Clear();
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
-					Lcd4_Write_String("F: DD/MM/AAAA");
+					//Lcd4_Write_String("F: DD/MM/AAAA");
+					imprimir_fecha();
 					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea	
 					if (hora_introducida == 0)
 					{
@@ -431,6 +435,21 @@ void procesar_accion()
 			}			
 		}
 	}	
+}
+
+void imprimir_fecha(void)
+{
+	Lcd4_Write_String("F: ");
+	Lcd4_Write_Char(getFecha_Dia()/10 + 48);
+	Lcd4_Write_Char(getFecha_Dia()%10 + 48);
+	Lcd4_Write_Char('/');
+	Lcd4_Write_Char(getFecha_Mes()/10 + 48);
+	Lcd4_Write_Char(getFecha_Mes()%10 + 48);
+	Lcd4_Write_Char('/');
+	Lcd4_Write_Char(50); //Cifra '2', de los millares
+	Lcd4_Write_Char(getFecha_Anno()/100 + 48); //La variable 'anno' va de 0 a 255. Centenas
+	Lcd4_Write_Char(((getFecha_Anno()/10)%10) + 48); //Decenas
+	Lcd4_Write_Char((getFecha_Anno()%10) + 48); //Unidades
 }
 
 
