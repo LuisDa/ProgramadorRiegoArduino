@@ -13,7 +13,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "lcd.h" //Can be download from the bottom of this article
+#include "lcd.h" 
 #include "fecha_hora.h"
 
 static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
@@ -50,11 +50,15 @@ volatile uint16_t contador_timer = 0; //Hasta 63
 volatile uint8_t contador = 0; 
 
 //Variables para fecha y hora (de momento, sólo hora)
-uint8_t hora;
-uint8_t minuto;
-uint8_t segundo;
+uint8_t hora = 0;
+uint8_t minuto = 0;
+uint8_t segundo = 0;
+uint8_t anno = 0; //Contando desde el año 2000
+uint8_t mes = 1;
+uint8_t dia = 1;
 uint8_t fecha_hora_teclas[4] = {0,0,0,0};
 uint8_t fecha_hora_caracteres[5] = {'_', '_', ':', '_', '_'};
+uint8_t fecha_caracteres[10] = {'D', 'D', '/', 'M', 'M', '/', 'A', 'A', 'A', 'A'};
 
 
 
@@ -129,34 +133,41 @@ void actualizar_LCD()
 			case FECHA_HORA:			
 				if (pantalla_activa_previa != FECHA_HORA) Lcd4_Clear();
 				Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
-				Lcd4_Write_String("F: DD/MM/AAAA");			
-				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea
-				/*
-				if (hora_introducida == 0) 
-				{
-					Lcd4_Write_String("H: HH:MM");
-				}
-				else
-				{*/
-					Lcd4_Write_String("H: ");
-					//for (int i = 0; i <= 4; i++) Lcd4_Write_Char(fecha_hora_caracteres[i]);				
-					uint8_t hora_decenas = (hora/10) + 48;
-					uint8_t hora_unidades = (hora%10) + 48;
-					uint8_t minuto_decenas = (minuto/10) + 48;
-					uint8_t minuto_unidades = (minuto%10) + 48;
-					uint8_t segundo_decenas = (segundo/10) + 48;
-					uint8_t segundo_unidades = (segundo%10) + 48;
+				
+				//Pintamos la fecha
+				//Lcd4_Write_String("F: DD/MM/AAAA");	
+				Lcd4_Write_String("F: ");
+				Lcd4_Write_Char(getFecha_Dia()/10 + 48);
+				Lcd4_Write_Char(getFecha_Dia()%10 + 48);
+				Lcd4_Write_Char('/');
+				Lcd4_Write_Char(getFecha_Mes()/10 + 48);
+				Lcd4_Write_Char(getFecha_Mes()%10 + 48);
+				Lcd4_Write_Char('/');
+				Lcd4_Write_Char(50); //Cifra '2', de los millares
+				Lcd4_Write_Char(getFecha_Anno()/100 + 48); //La variable 'anno' va de 0 a 255. Centenas
+				Lcd4_Write_Char(((getFecha_Anno()/10)%10) + 48); //Decenas
+				Lcd4_Write_Char((getFecha_Anno()%10) + 48); //Unidades
+						
+				//Pintamos la hora		
+				Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea				
+				Lcd4_Write_String("H: ");
+				
+				uint8_t hora_decenas = (hora/10) + 48;
+				uint8_t hora_unidades = (hora%10) + 48;
+				uint8_t minuto_decenas = (minuto/10) + 48;
+				uint8_t minuto_unidades = (minuto%10) + 48;
+				uint8_t segundo_decenas = (segundo/10) + 48;
+				uint8_t segundo_unidades = (segundo%10) + 48;
 					
-					Lcd4_Write_Char(hora_decenas);
-					Lcd4_Write_Char(hora_unidades);
-					Lcd4_Write_Char(':');
-					Lcd4_Write_Char(minuto_decenas);
-					Lcd4_Write_Char(minuto_unidades);
-					Lcd4_Write_Char(':');
-					Lcd4_Write_Char(segundo_decenas);
-					Lcd4_Write_Char(segundo_unidades);
-					
-				/*}*/
+				Lcd4_Write_Char(hora_decenas);
+				Lcd4_Write_Char(hora_unidades);
+				Lcd4_Write_Char(':');
+				Lcd4_Write_Char(minuto_decenas);
+				Lcd4_Write_Char(minuto_unidades);
+				Lcd4_Write_Char(':');
+				Lcd4_Write_Char(segundo_decenas);
+				Lcd4_Write_Char(segundo_unidades);
+								
 				Lcd4_Set_Cursor_Sts(0,0);
 				// -- Sólo para probar cursor superpuesto sobre un caracter adicional
 				//Lcd4_Set_Cursor(2,4);
