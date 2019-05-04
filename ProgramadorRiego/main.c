@@ -33,6 +33,7 @@ volatile static uint8_t columna = 0;
 static uint8_t hay_tecla = 0;
 uint8_t bucle_teclado_recorrido = 0;
 uint8_t hora_introducida = 0;
+uint8_t fecha_introducida = 0;
 
 //Variables relativas a la escritura en el LCD
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
@@ -185,7 +186,19 @@ void actualizar_LCD()
 					Lcd4_Clear();
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
 					//Lcd4_Write_String("F: DD/MM/AAAA");
-					imprimir_fecha();
+					if (fecha_introducida == 0)
+					{
+						Lcd4_Write_String("F: ");
+						
+						for(int i = 0; i <= 9; i++)
+						{
+							Lcd4_Write_Char(fecha_caracteres[i]);
+						}
+					}
+					else
+					{
+						imprimir_fecha();
+					}
 					Lcd4_Set_Cursor(2,1); //Cursor en la segunda línea	
 					if (hora_introducida == 0)
 					{
@@ -356,7 +369,7 @@ void procesar_accion()
 				pantalla_activa = FECHA_HORA_EDIT;	
 				escribir_lcd = 1;	
 				pos_horizontal = 0;
-				pos_vertical = 1;
+				pos_vertical = 0;
 			}			
 		}
 		else if (pantalla_activa == FECHA_HORA_EDIT) //Aquí, editar fecha y hora
@@ -447,37 +460,50 @@ void procesar_accion()
 				}
 				else if (tecla == '#')
 				{
-					minuto = 10*(fecha_hora_caracteres[3] - 48) + (fecha_hora_caracteres[4] - 48);
-					hora = 10*(fecha_hora_caracteres[0] - 48) + (fecha_hora_caracteres[1] - 48);
-					
-					setSegundos(0);
-					setMinutos(minuto);
-					setHoras(hora);
-					
-					hora_introducida = 1;
-					pantalla_activa = FECHA_HORA;
-					escribir_lcd = 1;
+					if (pos_vertical == 0)
+					{
+						dia = 10*(fecha_caracteres[0] - 48) + (fecha_caracteres[1] - 48);
+						mes = 10*(fecha_caracteres[3] - 48) + (fecha_caracteres[4] - 48);
+						anno = 100*(fecha_caracteres[7] - 48) + 1*(fecha_caracteres[8] - 48) + (fecha_caracteres[9] - 48);
+						
+						setDia(dia);
+						setMes(mes);
+						setAnno(anno);
+						
+						fecha_introducida = 1;
+						pos_vertical = 1;
+						pos_horizontal = 4;
+						escribir_lcd = 1;
+					}
+					else
+					{
+						minuto = 10*(fecha_hora_caracteres[3] - 48) + (fecha_hora_caracteres[4] - 48);
+						hora = 10*(fecha_hora_caracteres[0] - 48) + (fecha_hora_caracteres[1] - 48);
+										
+						setSegundos(0);
+						setMinutos(minuto);
+						setHoras(hora);
+										
+						hora_introducida = 1;
+						pantalla_activa = FECHA_HORA;
+						escribir_lcd = 1;	
+					}
 				}
 				else if (tecla == '*')
 				{
 					switch (pos_horizontal)
 					{
 						case 4:
-						//fecha_hora_teclas[0] = tecla;
 							fecha_hora_caracteres[0] = '_';
 							break;
-						case 5:
-						//fecha_hora_teclas[1] = tecla;
+						case 5:						
 							fecha_hora_caracteres[1] = '_';
 							break;
-						case 7:
-						//fecha_hora_teclas[2] = tecla;
+						case 7:						
 							fecha_hora_caracteres[3] = '_';
 							break;
-						case 8:
-						//fecha_hora_teclas[3] = tecla;
-							fecha_hora_caracteres[4] = '_';
-						//hora_introducida = 1;
+						case 8:						
+							fecha_hora_caracteres[4] = '_';						
 							break;
 						default:
 							break;
