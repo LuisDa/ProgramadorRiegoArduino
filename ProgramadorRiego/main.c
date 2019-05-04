@@ -227,6 +227,9 @@ void actualizar_LCD()
 										
 					Lcd4_Set_Cursor(2,pos_horizontal);
 					Lcd4_Set_Cursor_Sts(1,1);
+					
+					if (pos_vertical == 0) Lcd4_Set_Cursor(1,4);
+					
 					escribir_lcd = 0;
 				}
 				break;
@@ -321,12 +324,12 @@ void explorar_teclado()
 
 void procesar_accion()
 {
-	if (tecla == 'D') 
+	if ((tecla == 'D') && (pantalla_activa != FECHA_HORA_EDIT))
 	{
 		pantalla_activa = DEBUG;
 		//escribir_lcd = 1;
 	}
-	else if (tecla == 'A') 
+	else if ((tecla == 'A') && (pantalla_activa != FECHA_HORA_EDIT))
 	{
 		pantalla_activa = FECHA_HORA;
 		escribir_lcd = 1;
@@ -357,6 +360,17 @@ void procesar_accion()
 			}
 			else if (tecla != tecla0)
 			{
+				if ((tecla == 'A') && (pantalla_activa == FECHA_HORA_EDIT))
+				{
+					escribir_lcd = 1;
+					pos_vertical = 0;
+				}
+				else if ((tecla == 'D') && (pantalla_activa_previa == FECHA_HORA_EDIT))
+				{
+					escribir_lcd = 1;
+					pos_vertical = 1;
+				}
+				
 				if ((tecla >= 48) && (tecla <= 57)) //Sólo teclas numéricas
 				{
 					if (pos_horizontal == 0) pos_horizontal = 4;
