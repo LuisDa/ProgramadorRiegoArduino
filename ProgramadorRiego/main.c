@@ -203,7 +203,7 @@ void actualizar_LCD()
 					if (hora_introducida == 0)
 					{
 						Lcd4_Write_String("H: __:__");		
-					}
+					}					
 					else
 					{
 						Lcd4_Write_String("H: ");
@@ -223,7 +223,8 @@ void actualizar_LCD()
 						//}												
 					}
 					
-					Lcd4_Set_Cursor(2,4);				
+					//Lcd4_Set_Cursor(2,4);				
+					Lcd4_Set_Cursor((pos_vertical+1), 4);
 					Lcd4_Set_Cursor_Sts(1,1);	
 					escribir_lcd = 0;					
 				}
@@ -425,7 +426,10 @@ void procesar_accion()
 						}
 						
 						if (pos_horizontal <= 13) pos_horizontal++;
-						if ((pos_horizontal == 6) || (pos_horizontal == 9) || (pos_horizontal == 10)) pos_horizontal++;
+						if (pos_horizontal == 6) pos_horizontal++;
+						if (pos_horizontal == 9) pos_horizontal = 11;
+						
+						//if ((pos_horizontal == 6) || (pos_horizontal == 9) || (pos_horizontal == 10)) pos_horizontal++;
 					}
 					else if (pos_vertical == 1) //Editar hora
 					{					
@@ -464,7 +468,7 @@ void procesar_accion()
 					{
 						dia = 10*(fecha_caracteres[0] - 48) + (fecha_caracteres[1] - 48);
 						mes = 10*(fecha_caracteres[3] - 48) + (fecha_caracteres[4] - 48);
-						anno = 100*(fecha_caracteres[7] - 48) + 1*(fecha_caracteres[8] - 48) + (fecha_caracteres[9] - 48);
+						anno = 100*(fecha_caracteres[7] - 48) + 10*(fecha_caracteres[8] - 48) + (fecha_caracteres[9] - 48);
 						
 						setDia(dia);
 						setMes(mes);
