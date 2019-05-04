@@ -217,7 +217,13 @@ void actualizar_LCD()
 				else
 				{
 					Lcd4_Set_Cursor(1,1); //Cursor en la primera línea
-					Lcd4_Write_String("F: DD/MM/AAAA");
+					//Lcd4_Write_String("F: DD/MM/AAAA");
+					Lcd4_Write_String("F: ");
+					for(int i = 0; i <= 9; i++)
+					{
+						Lcd4_Write_Char(fecha_caracteres[i]);
+					}
+					
 					Lcd4_Set_Cursor(2,4);
 					
 					for(int i = 0; i <= 4; i++)
@@ -225,10 +231,12 @@ void actualizar_LCD()
 						Lcd4_Write_Char(fecha_hora_caracteres[i]);
 					}
 										
-					Lcd4_Set_Cursor(2,pos_horizontal);
-					Lcd4_Set_Cursor_Sts(1,1);
+					//Lcd4_Set_Cursor(2,pos_horizontal);
+					//Lcd4_Set_Cursor_Sts(1,1);
 					
-					if (pos_vertical == 0) Lcd4_Set_Cursor(1,4);
+					if (pos_vertical == 0) Lcd4_Set_Cursor(1,pos_horizontal);
+					else Lcd4_Set_Cursor(2,pos_horizontal);
+					Lcd4_Set_Cursor_Sts(1,1);
 					
 					escribir_lcd = 0;
 				}
@@ -348,11 +356,12 @@ void procesar_accion()
 				pantalla_activa = FECHA_HORA_EDIT;	
 				escribir_lcd = 1;	
 				pos_horizontal = 0;
+				pos_vertical = 1;
 			}			
 		}
 		else if (pantalla_activa == FECHA_HORA_EDIT) //Aquí, editar fecha y hora
 		{
-			if (pantalla_activa_previa == FECHA_HORA) 
+			if (pantalla_activa_previa == FECHA_HORA) //Parece que en este bloque no se mete nunca...
 			{
 				pos_horizontal = 0; //De 0 a 15
 				pos_vertical = 1; //0->primera fila, 1->segunda fila
@@ -375,31 +384,64 @@ void procesar_accion()
 				{
 					if (pos_horizontal == 0) pos_horizontal = 4;
 					
-					switch (pos_horizontal)
+					if (pos_vertical == 0)
 					{
-						case 4: 
-							//fecha_hora_teclas[0] = tecla;
-							fecha_hora_caracteres[0] = tecla;
-							break;
-						case 5:	
-							//fecha_hora_teclas[1] = tecla;
-							fecha_hora_caracteres[1] = tecla;
-							break;						
-						case 7:
-							//fecha_hora_teclas[2] = tecla;
-							fecha_hora_caracteres[3] = tecla;
-							break;
-						case 8:
-							//fecha_hora_teclas[3] = tecla;
-							fecha_hora_caracteres[4] = tecla;
-							//hora_introducida = 1;
-							break;							
-						default: 
-							break;
+						switch (pos_horizontal) //Editar fecha
+						{
+							case 4:
+								fecha_caracteres[0] = tecla;
+								break;
+							case 5:
+								fecha_caracteres[1] = tecla;
+								break;
+							case 7:
+								fecha_caracteres[3] = tecla;
+								break;
+							case 8:
+								fecha_caracteres[4] = tecla;
+								break;
+							case 11: //Pasamos a editar las centenas del año (variará de 2000 a 2255).
+								fecha_caracteres[7] = tecla;
+								break;
+							case 12:
+								fecha_caracteres[8] = tecla;
+								break;
+							case 13:
+								fecha_caracteres[9] = tecla;
+								break;
+						}
+						
+						if (pos_horizontal <= 13) pos_horizontal++;
+						if ((pos_horizontal == 6) || (pos_horizontal == 9) || (pos_horizontal == 10)) pos_horizontal++;
 					}
+					else if (pos_vertical == 1) //Editar hora
+					{					
+						switch (pos_horizontal)
+						{
+							case 4: 
+								//fecha_hora_teclas[0] = tecla;
+								fecha_hora_caracteres[0] = tecla;
+								break;
+							case 5:	
+								//fecha_hora_teclas[1] = tecla;
+								fecha_hora_caracteres[1] = tecla;
+								break;						
+							case 7:
+								//fecha_hora_teclas[2] = tecla;
+								fecha_hora_caracteres[3] = tecla;
+								break;
+							case 8:
+								//fecha_hora_teclas[3] = tecla;
+								fecha_hora_caracteres[4] = tecla;
+								//hora_introducida = 1;
+								break;							
+							default: 
+								break;
+						}
 					
-					if (pos_horizontal <= 8) pos_horizontal++;
-					if (pos_horizontal == 6) pos_horizontal++;
+						if (pos_horizontal <= 8) pos_horizontal++;
+						if (pos_horizontal == 6) pos_horizontal++;
+					}
 
 					escribir_lcd = 1;
 				}
