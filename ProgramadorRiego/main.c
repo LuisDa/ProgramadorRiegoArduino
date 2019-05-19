@@ -59,7 +59,7 @@ uint8_t mes = 1;
 uint8_t dia = 1;
 uint8_t fecha_hora_teclas[4] = {0,0,0,0};
 uint8_t fecha_hora_caracteres[5] = {'_', '_', ':', '_', '_'};
-uint8_t fecha_caracteres[10] = {'D', 'D', '/', 'M', 'M', '/', 'A', 'A', 'A', 'A'};
+uint8_t fecha_caracteres[10] = {'D', 'D', '/', 'M', 'M', '/', '2', 'A', 'A', 'A'};
 
 
 
