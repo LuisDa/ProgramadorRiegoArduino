@@ -37,8 +37,10 @@ uint8_t fecha_introducida = 0;
 
 //Variables relativas a la escritura en el LCD
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
-uint8_t pantalla_activa = TST_LCD;
-uint8_t pantalla_activa_previa = TST_LCD;
+uint8_t pantalla_activa = FECHA_HORA;
+uint8_t pantalla_activa_previa = FECHA_HORA;
+//uint8_t pantalla_activa = TST_LCD;
+//uint8_t pantalla_activa_previa = TST_LCD;
 //uint8_t pantalla_activa = FECHA_HORA_EDIT;
 //uint8_t pantalla_activa_previa = FECHA_HORA;
 uint8_t pos_horizontal = 0; //Número de columna
@@ -356,10 +358,14 @@ void procesar_accion()
 		pantalla_activa = FECHA_HORA;
 		escribir_lcd = 1;
 	}
-	else if (tecla == 'C') 
+	else if (tecla == 'C')
 	{
-		pantalla_activa = CNT_TIMER;	
-		escribir_lcd = 1;
+		if (pantalla_activa_previa == DEBUG)
+		{		
+			pantalla_activa = CNT_TIMER;	
+			escribir_lcd = 1;
+		}
+		//Si no, aquí entraríamos para editar programas de riego
 	}	
 	else 
 	{			
