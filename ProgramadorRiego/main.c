@@ -392,6 +392,7 @@ void procesar_accion()
 				{
 					escribir_lcd = 1;
 					pos_vertical = 1;
+					pos_horizontal = 4;
 				}
 				
 				if ((tecla >= 48) && (tecla <= 57)) //Sólo teclas numéricas
@@ -475,6 +476,7 @@ void procesar_accion()
 						setAnno(anno);
 						
 						fecha_introducida = 1;
+						pantalla_activa = FECHA_HORA;
 						pos_vertical = 1;
 						pos_horizontal = 4;
 						escribir_lcd = 1;
