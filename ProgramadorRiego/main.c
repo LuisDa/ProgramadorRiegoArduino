@@ -426,6 +426,8 @@ void procesar_accion()
 								break;
 						}
 						
+						if (fecha_introducida == 0) fecha_introducida = 1;
+						
 						if (pos_horizontal <= 13) pos_horizontal++;
 						if (pos_horizontal == 6) pos_horizontal++;
 						if (pos_horizontal == 9) pos_horizontal = 11;
