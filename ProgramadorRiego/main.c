@@ -21,7 +21,7 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'7', '8', '9', 'C'}, 
 										 {'*', '0', '#', 'D'}};
 
-enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD, FECHA_HORA_EDIT};
+enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD, FECHA_HORA_EDIT, MENU_PROGRAMAS};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
@@ -108,6 +108,12 @@ void actualizar_LCD()
 	{
 		switch (pantalla_activa)
 		{
+			case MENU_PROGRAMAS:
+				Lcd4_Clear();
+				Lcd4_Set_Cursor(1,1);
+				Lcd4_Write_String("PROGRAMAS RIEGO");
+				escribir_lcd = 0;
+				break;
 			case TST_LCD:
 				//Lcd4_Clear();
 				Lcd4_Init();
@@ -365,6 +371,12 @@ void procesar_accion()
 			pantalla_activa = CNT_TIMER;	
 			escribir_lcd = 1;
 		}
+		else
+		{
+			pantalla_activa = MENU_PROGRAMAS;
+			escribir_lcd = 1;
+		}
+		
 		//Si no, aquí entraríamos para editar programas de riego
 	}	
 	else 
