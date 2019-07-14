@@ -35,6 +35,10 @@ static uint8_t hay_tecla = 0;
 uint8_t bucle_teclado_recorrido = 0;
 uint8_t hora_introducida = 0;
 uint8_t fecha_introducida = 0;
+static volatile uint16_t lectura_ADC = 0;
+float voltajeADC_mV = 0.0;
+uint8_t temperatura = 0;
+uint8_t temperatura_previa = 0;
 
 //Variables relativas a la escritura en el LCD
 static uint8_t escribir_lcd = 0; //Escribiremos en el LCD sólo si hay cambios
@@ -145,6 +149,18 @@ void actualizar_LCD()
 				else if (pos_menu_actual == CONDIC_AMBIENTE) Lcd4_Write_String("3- COND. AMBIENTE");
 				escribir_lcd = 0;
 				break;
+			case TEMPERATURA:
+				Lcd4_Clear();
+				Lcd4_Set_Cursor(1,0);
+				Lcd4_Write_String("TEMP: ");
+				uint8_t temp_decenas = (temperatura/10) + 48;
+				uint8_t temp_unidades = (temperatura%10) + 48;
+				Lcd4_Write_Char(temp_decenas);
+				Lcd4_Write_Char(temp_unidades);
+				Lcd4_Write_String(" ºC");
+				escribir_lcd = 0;
+				//Lcd4_Write_String();
+				break;			
 			case TST_LCD:
 				//Lcd4_Clear();
 				Lcd4_Init();
@@ -428,7 +444,24 @@ void procesar_accion()
 				else pos_menu_actual = CONDIC_AMBIENTE;
 				escribir_lcd = 1;				
 			}
-			
+			else if ((tecla == '#') && (pos_menu_actual == CONDIC_AMBIENTE))
+			{
+				pantalla_activa = TEMPERATURA;
+				escribir_lcd = 1;
+			}
+			else if (tecla == '*')
+			{
+				pantalla_activa = FECHA_HORA;
+				escribir_lcd = 1;
+			}			
+		}	
+		else if (pantalla_activa == TEMPERATURA)
+		{
+			if (tecla == '*')
+			{
+				pantalla_activa = MENU_PROGRAMAS;
+				escribir_lcd = 1;
+			}
 		}
 		else if (pantalla_activa == FECHA_HORA)
 		{
@@ -626,6 +659,7 @@ int main(void)
 	PORTC = (1 << PORTC0) | (1 << PORTC1) | (1 << PORTC2) | (1 << PORTC3);
 	
 	//setup_external_int();
+	setup_ADC();
 	setup_timer0();
 		
 	//Escribimos una primera vez en el LCD, luego sólo si hay cambios
@@ -657,10 +691,22 @@ int main(void)
 			pos_horizontal_prev = pos_horizontal;
 		}
 		
+
+
+		if (contador_timer == 31)
+		{
+			lectura_ADC = ReadADC(4);
+			//voltajeADC_mV = 5000*lectura_ADC/1023;
+			temperatura = (uint8_t)((500*lectura_ADC/1023) - 50);
+		}		
+		
+		if ((temperatura != temperatura_previa) && (pantalla_activa == TEMPERATURA)) escribir_lcd = 1;
+		
 		procesar_accion();
 		actualizar_LCD();		
 		tecla0 = tecla;
 		pantalla_activa_previa = pantalla_activa;
+		temperatura_previa = temperatura;
 		_delay_ms(10);
 	}
 }
@@ -717,4 +763,8 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 		if (pantalla_activa == FECHA_HORA) escribir_lcd = 1;
 		
 	}	
+	//else if (contador_timer == 31)
+	//{
+	//	lectura_ADC = ReadADC(4);
+	//}
 }
