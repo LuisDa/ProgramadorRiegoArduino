@@ -22,7 +22,7 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'*', '0', '#', 'D'}};
 
 enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD, FECHA_HORA_EDIT, MENU_PROGRAMAS, TEMPERATURA};
-enum OpcionesMenu {PROGRAMAS_RIEGO, ACTIVAR_MANUAL, CONDIC_AMBIENTE};
+enum OpcionesMenu {PROGRAMAS_RIEGO=0, ACTIVAR_MANUAL=1, CONDIC_AMBIENTE=2};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
@@ -139,10 +139,10 @@ void actualizar_LCD()
 				Lcd4_Clear();
 				Lcd4_Set_Cursor(1,0);
 				Lcd4_Write_String("MENU: ");
-				Lcd4_Set_Cursor(2,1);
-				if (pos_menu_actual == PROGRAMAS_RIEGO) Lcd4_Write_String("1. PROGRAMAS RIEGO");
-				else if (pos_menu_actual == ACTIVAR_MANUAL) Lcd4_Write_String("2. ACTIV. MANUAL");
-				else if (pos_menu_actual == CONDIC_AMBIENTE) Lcd4_Write_String("3. CONDIC. AMBIENTE");
+				Lcd4_Set_Cursor(2,0);
+				if (pos_menu_actual == PROGRAMAS_RIEGO) Lcd4_Write_String("1- PROG. RIEGO");
+				else if (pos_menu_actual == ACTIVAR_MANUAL) Lcd4_Write_String("2- ACTIV. MANUAL");
+				else if (pos_menu_actual == CONDIC_AMBIENTE) Lcd4_Write_String("3- COND. AMBIENTE");
 				escribir_lcd = 0;
 				break;
 			case TST_LCD:
@@ -416,14 +416,16 @@ void procesar_accion()
 		{			
 			if (tecla == 'A') 
 			{
-				pos_menu_actual--;
-				if (pos_menu_actual < 0) pos_menu_actual = 0;
+				//pos_menu_actual--;
+				if (pos_menu_actual > 0) pos_menu_actual--;
+				else pos_menu_actual = PROGRAMAS_RIEGO;
 				escribir_lcd = 1;	
 			}
 			else if (tecla == 'D')
 			{
-				pos_menu_actual++;
-				if (pos_menu_actual > 2) pos_menu_actual = 2;
+				//pos_menu_actual++;
+				if (pos_menu_actual < 2) pos_menu_actual++;
+				else pos_menu_actual = CONDIC_AMBIENTE;
 				escribir_lcd = 1;				
 			}
 			
