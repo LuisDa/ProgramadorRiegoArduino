@@ -21,7 +21,8 @@ static const char getKeyPressed[4][4] = {{'1', '2', '3', 'A'},
 										 {'7', '8', '9', 'C'}, 
 										 {'*', '0', '#', 'D'}};
 
-enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD, FECHA_HORA_EDIT, MENU_PROGRAMAS};
+enum Pantallas {DEBUG, FECHA_HORA, CNT_TIMER, TST_LCD, FECHA_HORA_EDIT, MENU_PROGRAMAS, TEMPERATURA};
+enum OpcionesMenu {PROGRAMAS_RIEGO, ACTIVAR_MANUAL, CONDIC_AMBIENTE};
 
 //Declaración de variables globales
 static uint8_t contador_interr = 0;
@@ -48,6 +49,8 @@ uint8_t pos_horizontal_prev = 0;
 uint8_t pos_vertical = 0; //Número de fila
 uint8_t pos_vertical_prev = 0;
 
+uint8_t pos_menu_actual = PROGRAMAS_RIEGO;
+
 //Variables para gestión del TIMER
 volatile uint16_t contador_timer = 0; //Hasta 63
 volatile uint8_t contador = 0; 
@@ -68,6 +71,9 @@ uint8_t fecha_caracteres[10] = {'D', 'D', '/', 'M', 'M', '/', '2', 'A', 'A', 'A'
 //Declaración de funciones
 void setup_external_int(void);
 void setup_timer0(void);
+void setup_ADC(void);
+
+uint16_t ReadADC(uint8_t ADC_Channel);
 
 void actualizar_LCD(void);
 void explorar_teclado(void);
@@ -76,6 +82,15 @@ void procesar_accion(void);
 void imprimir_fecha(void);
 
 //Definición de funciones
+//Función de configuración del ADC (sólo podremos, en este proyecto, usar las entradas 4 y 5, las otras cuatro están pilladas para lectura del teclado)
+void setup_ADC(void)
+{
+	// Select Vref=AVcc
+	ADMUX |= (1<<REFS0);
+	//set prescaller to 128 and enable ADC
+	ADCSRA |= (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0)|(1<<ADEN);	
+}
+
 //Función de configuración de las interrupciones externas INT0 (pin PD2)
 void setup_external_int(void)
 {
@@ -101,6 +116,18 @@ void setup_timer0(void)
 	sei();
 }
 
+//Función de lectura del ADC 
+uint16_t ReadADC(uint8_t ADC_Channel)
+{
+	//select ADC channel with safety mask
+	ADMUX = (ADMUX & 0xF0) | (ADC_Channel & 0x0F);
+	//single conversion mode
+	ADCSRA |= (1<<ADSC);
+	// wait until ADC conversion is complete
+	while( ADCSRA & (1<<ADSC) );
+	return ADC;
+}
+
 void actualizar_LCD()
 {
 	//Actualizar el teclado
@@ -110,8 +137,12 @@ void actualizar_LCD()
 		{
 			case MENU_PROGRAMAS:
 				Lcd4_Clear();
-				Lcd4_Set_Cursor(1,1);
-				Lcd4_Write_String("PROGRAMAS RIEGO");
+				Lcd4_Set_Cursor(1,0);
+				Lcd4_Write_String("MENU: ");
+				Lcd4_Set_Cursor(2,1);
+				if (pos_menu_actual == PROGRAMAS_RIEGO) Lcd4_Write_String("1. PROGRAMAS RIEGO");
+				else if (pos_menu_actual == ACTIVAR_MANUAL) Lcd4_Write_String("2. ACTIV. MANUAL");
+				else if (pos_menu_actual == CONDIC_AMBIENTE) Lcd4_Write_String("3. CONDIC. AMBIENTE");
 				escribir_lcd = 0;
 				break;
 			case TST_LCD:
@@ -354,12 +385,12 @@ void explorar_teclado()
 
 void procesar_accion()
 {
-	if ((tecla == 'D') && (pantalla_activa != FECHA_HORA_EDIT))
+	if ((tecla == 'D') && (pantalla_activa != FECHA_HORA_EDIT) && (pantalla_activa != MENU_PROGRAMAS))
 	{
 		pantalla_activa = DEBUG;
 		//escribir_lcd = 1;
 	}
-	else if ((tecla == 'A') && (pantalla_activa != FECHA_HORA_EDIT))
+	else if ((tecla == 'A') && (pantalla_activa != FECHA_HORA_EDIT) && (pantalla_activa != MENU_PROGRAMAS))
 	{
 		pantalla_activa = FECHA_HORA;
 		escribir_lcd = 1;
@@ -381,7 +412,23 @@ void procesar_accion()
 	}	
 	else 
 	{			
-		if (pantalla_activa == FECHA_HORA)
+		if (pantalla_activa == MENU_PROGRAMAS)
+		{			
+			if (tecla == 'A') 
+			{
+				pos_menu_actual--;
+				if (pos_menu_actual < 0) pos_menu_actual = 0;
+				escribir_lcd = 1;	
+			}
+			else if (tecla == 'D')
+			{
+				pos_menu_actual++;
+				if (pos_menu_actual > 2) pos_menu_actual = 2;
+				escribir_lcd = 1;				
+			}
+			
+		}
+		else if (pantalla_activa == FECHA_HORA)
 		{
 			if (tecla == 'B') 
 			{
